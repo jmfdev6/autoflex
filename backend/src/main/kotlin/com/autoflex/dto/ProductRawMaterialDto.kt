@@ -18,11 +18,13 @@ data class ProductRawMaterialDto(
 data class CreateProductRawMaterialRequest @JsonCreator constructor(
     @JsonProperty("rawMaterialCode")
     @field:NotBlank(message = "Raw material code is required")
+    @field:jakarta.validation.constraints.Size(min = 1, max = 50, message = "Raw material code must be between 1 and 50 characters")
     val rawMaterialCode: String,
     
     @JsonProperty("quantity")
     @field:NotNull(message = "Quantity is required")
     @field:Positive(message = "Quantity must be positive")
+    @field:jakarta.validation.constraints.DecimalMin(value = "0.01", message = "Quantity must be at least 0.01")
     val quantity: BigDecimal
 )
 
@@ -30,5 +32,6 @@ data class UpdateProductRawMaterialRequest @JsonCreator constructor(
     @JsonProperty("quantity")
     @field:NotNull(message = "Quantity is required")
     @field:Positive(message = "Quantity must be positive")
+    @field:jakarta.validation.constraints.DecimalMin(value = "0.01", message = "Quantity must be at least 0.01")
     val quantity: BigDecimal
 )

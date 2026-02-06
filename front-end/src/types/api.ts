@@ -10,9 +10,18 @@ export interface ApiError {
   details?: unknown;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
+export interface PageResponse<T> {
+  content: T[];
   page: number;
-  pageSize: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface PageRequest {
+  page?: number;
+  size?: number;
+  sort?: string;
 }

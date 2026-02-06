@@ -2,6 +2,8 @@ package com.autoflex.resource
 
 import com.autoflex.dto.ApiResponse
 import com.autoflex.dto.CreateProductRequest
+import com.autoflex.dto.PageRequest
+import com.autoflex.dto.PageResponse
 import com.autoflex.dto.ProductDto
 import com.autoflex.dto.UpdateProductRequest
 import com.autoflex.service.ProductService
@@ -26,22 +28,38 @@ class ProductsResource @Inject constructor(
     
     @GET
     @Operation(
-        summary = "Listar todos os produtos",
-        description = "Retorna uma lista com todos os produtos cadastrados"
+        summary = "Listar produtos",
+        description = "Retorna uma lista paginada de produtos. Use os parâmetros page, size e sort para paginação."
     )
     @APIResponse(
         responseCode = "200",
         description = "Lista de produtos retornada com sucesso",
         content = [Content(schema = Schema(implementation = ApiResponse::class))]
     )
-    fun getAll(): Response {
-        val products = productService.getAll()
-        return Response.ok(
-            ApiResponse(
-                success = true,
-                data = products
-            )
-        ).build()
+    fun getAll(
+        @BeanParam pageRequest: PageRequest
+    ): Response {
+        // Se não especificou paginação (valores padrão), retornar lista simples para compatibilidade
+        val usePagination = pageRequest.page > 0 || pageRequest.size != 20 || pageRequest.sort != "code"
+        
+        return if (usePagination) {
+            val pageResponse = productService.getAllPaginated(pageRequest)
+            Response.ok(
+                ApiResponse(
+                    success = true,
+                    data = pageResponse
+                )
+            ).build()
+        } else {
+            // Compatibilidade: retornar lista simples se não usar paginação
+            val products = productService.getAll()
+            Response.ok(
+                ApiResponse(
+                    success = true,
+                    data = products
+                )
+            ).build()
+        }
     }
     
     @GET

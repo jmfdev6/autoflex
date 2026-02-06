@@ -1,6 +1,8 @@
 package com.autoflex.service
 
 import com.autoflex.dto.CreateRawMaterialRequest
+import com.autoflex.dto.PageRequest
+import com.autoflex.dto.PageResponse
 import com.autoflex.dto.RawMaterialDto
 import com.autoflex.dto.UpdateRawMaterialRequest
 import com.autoflex.entity.RawMaterial
@@ -17,6 +19,31 @@ class RawMaterialService(
     
     fun getAll(): List<RawMaterialDto> {
         return rawMaterialRepository.listAll().map { it.toDto() }
+    }
+    
+    fun getAllPaginated(pageRequest: PageRequest): PageResponse<RawMaterialDto> {
+        val sortField = pageRequest.getSortField()
+        val query = rawMaterialRepository.findAll()
+        
+        // Aplicar ordenação
+        val sortedQuery = if (pageRequest.isAscending()) {
+            query.orderBy(sortField)
+        } else {
+            query.orderBy("$sortField desc")
+        }
+        
+        // Paginar
+        val page = sortedQuery.page(pageRequest.page, pageRequest.size)
+        val totalElements = rawMaterialRepository.count()
+        
+        val content = page.list().map { it.toDto() }
+        
+        return PageResponse.of(
+            content = content,
+            page = pageRequest.page,
+            size = pageRequest.size,
+            totalElements = totalElements
+        )
     }
     
     fun getByCode(code: String): RawMaterialDto {

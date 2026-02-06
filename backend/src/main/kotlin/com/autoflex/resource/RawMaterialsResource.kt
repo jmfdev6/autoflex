@@ -2,6 +2,7 @@ package com.autoflex.resource
 
 import com.autoflex.dto.ApiResponse
 import com.autoflex.dto.CreateRawMaterialRequest
+import com.autoflex.dto.PageRequest
 import com.autoflex.dto.RawMaterialDto
 import com.autoflex.dto.UpdateRawMaterialRequest
 import com.autoflex.service.RawMaterialService
@@ -26,22 +27,38 @@ class RawMaterialsResource @Inject constructor(
     
     @GET
     @Operation(
-        summary = "Listar todas as matérias-primas",
-        description = "Retorna uma lista com todas as matérias-primas cadastradas"
+        summary = "Listar matérias-primas",
+        description = "Retorna uma lista paginada de matérias-primas. Use os parâmetros page, size e sort para paginação."
     )
     @APIResponse(
         responseCode = "200",
         description = "Lista de matérias-primas retornada com sucesso",
         content = [Content(schema = Schema(implementation = ApiResponse::class))]
     )
-    fun getAll(): Response {
-        val rawMaterials = rawMaterialService.getAll()
-        return Response.ok(
-            ApiResponse(
-                success = true,
-                data = rawMaterials
-            )
-        ).build()
+    fun getAll(
+        @BeanParam pageRequest: PageRequest
+    ): Response {
+        // Se não especificou paginação (valores padrão), retornar lista simples para compatibilidade
+        val usePagination = pageRequest.page > 0 || pageRequest.size != 20 || pageRequest.sort != "code"
+        
+        return if (usePagination) {
+            val pageResponse = rawMaterialService.getAllPaginated(pageRequest)
+            Response.ok(
+                ApiResponse(
+                    success = true,
+                    data = pageResponse
+                )
+            ).build()
+        } else {
+            // Compatibilidade: retornar lista simples se não usar paginação
+            val rawMaterials = rawMaterialService.getAll()
+            Response.ok(
+                ApiResponse(
+                    success = true,
+                    data = rawMaterials
+                )
+            ).build()
+        }
     }
     
     @GET

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Product, CreateProductRequest, UpdateProductRequest } from '@/types/product';
+import { PageRequest, PageResponse } from '@/types/api';
 import { productService } from '@/services/productService';
 import { ProductsState } from '../types';
 
@@ -7,12 +8,21 @@ const initialState: ProductsState = {
   items: [],
   loading: false,
   error: null,
+  pagination: null,
 };
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchAll',
   async () => {
     const response = await productService.getAll();
+    return response.data;
+  }
+);
+
+export const fetchProductsPaginated = createAsyncThunk(
+  'products/fetchPaginated',
+  async (pageRequest?: PageRequest) => {
+    const response = await productService.getAllPaginated(pageRequest);
     return response.data;
   }
 );
@@ -69,6 +79,27 @@ const productsSlice = createSlice({
         state.items = action.payload;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch products';
+      })
+      // Fetch paginated
+      .addCase(fetchProductsPaginated.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProductsPaginated.fulfilled, (state, action: PayloadAction<PageResponse<Product>>) => {
+        state.loading = false;
+        state.items = action.payload.content;
+        state.pagination = {
+          page: action.payload.page,
+          size: action.payload.size,
+          totalElements: action.payload.totalElements,
+          totalPages: action.payload.totalPages,
+          first: action.payload.first,
+          last: action.payload.last,
+        };
+      })
+      .addCase(fetchProductsPaginated.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch products';
       })

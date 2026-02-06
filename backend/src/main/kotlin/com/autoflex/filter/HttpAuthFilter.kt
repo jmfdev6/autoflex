@@ -4,6 +4,7 @@ import io.quarkus.vertx.http.runtime.filters.Filters
 import io.vertx.ext.web.RoutingContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.event.Observes
+import org.eclipse.microprofile.config.inject.ConfigProperty
 
 @ApplicationScoped
 class HttpAuthFilter {
@@ -18,7 +19,8 @@ class HttpAuthFilter {
         "/health"
     )
 
-    private val validPassword = "projedata"
+    @ConfigProperty(name = "autoflex.api.key", defaultValue = "projedata")
+    lateinit var validPassword: String
 
     fun register(@Observes filters: Filters) {
         filters.register(io.vertx.core.Handler { ctx: RoutingContext ->

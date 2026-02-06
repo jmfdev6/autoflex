@@ -1,6 +1,8 @@
 package com.autoflex.service
 
 import com.autoflex.dto.CreateProductRequest
+import com.autoflex.dto.PageRequest
+import com.autoflex.dto.PageResponse
 import com.autoflex.dto.ProductDto
 import com.autoflex.dto.UpdateProductRequest
 import com.autoflex.entity.Product
@@ -19,6 +21,31 @@ class ProductService(
     
     fun getAll(): List<ProductDto> {
         return productRepository.listAll().map { it.toDto() }
+    }
+    
+    fun getAllPaginated(pageRequest: PageRequest): PageResponse<ProductDto> {
+        val sortField = pageRequest.getSortField()
+        val query = productRepository.findAll()
+        
+        // Aplicar ordenação
+        val sortedQuery = if (pageRequest.isAscending()) {
+            query.orderBy(sortField)
+        } else {
+            query.orderBy("$sortField desc")
+        }
+        
+        // Paginar
+        val page = sortedQuery.page(pageRequest.page, pageRequest.size)
+        val totalElements = productRepository.count()
+        
+        val content = page.list().map { it.toDto() }
+        
+        return PageResponse.of(
+            content = content,
+            page = pageRequest.page,
+            size = pageRequest.size,
+            totalElements = totalElements
+        )
     }
     
     fun getByCode(code: String): ProductDto {

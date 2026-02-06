@@ -4,6 +4,7 @@ import {
   CreateRawMaterialRequest,
   UpdateRawMaterialRequest,
 } from '@/types/rawMaterial';
+import { PageRequest, PageResponse } from '@/types/api';
 import { rawMaterialService } from '@/services/rawMaterialService';
 import { RawMaterialsState } from '../types';
 
@@ -11,12 +12,21 @@ const initialState: RawMaterialsState = {
   items: [],
   loading: false,
   error: null,
+  pagination: null,
 };
 
 export const fetchRawMaterials = createAsyncThunk(
   'rawMaterials/fetchAll',
   async () => {
     const response = await rawMaterialService.getAll();
+    return response.data;
+  }
+);
+
+export const fetchRawMaterialsPaginated = createAsyncThunk(
+  'rawMaterials/fetchPaginated',
+  async (pageRequest?: PageRequest) => {
+    const response = await rawMaterialService.getAllPaginated(pageRequest);
     return response.data;
   }
 );
@@ -73,6 +83,27 @@ const rawMaterialsSlice = createSlice({
         state.items = action.payload;
       })
       .addCase(fetchRawMaterials.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch raw materials';
+      })
+      // Fetch paginated
+      .addCase(fetchRawMaterialsPaginated.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchRawMaterialsPaginated.fulfilled, (state, action: PayloadAction<PageResponse<RawMaterial>>) => {
+        state.loading = false;
+        state.items = action.payload.content;
+        state.pagination = {
+          page: action.payload.page,
+          size: action.payload.size,
+          totalElements: action.payload.totalElements,
+          totalPages: action.payload.totalPages,
+          first: action.payload.first,
+          last: action.payload.last,
+        };
+      })
+      .addCase(fetchRawMaterialsPaginated.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch raw materials';
       })
