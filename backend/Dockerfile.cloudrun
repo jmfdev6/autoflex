@@ -1,0 +1,47 @@
+# Dockerfile otimizado para Google Cloud Run
+# Cloud Run usa porta 8080 por padrão e requer variável PORT
+
+# Stage 1: Build
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+
+# Copy pom.xml and download dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source code and build
+COPY src ./src
+RUN mvn clean package -DskipTests -Pprod
+
+# Stage 2: Runtime
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# Install wget for health check
+RUN apk add --no-cache wget
+
+# Create non-root user (Cloud Run requer usuário não-root)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Copy built application
+COPY --from=build --chown=appuser:appgroup /app/target/quarkus-app/lib/ /app/lib/
+COPY --from=build --chown=appuser:appgroup /app/target/quarkus-app/*.jar /app/
+COPY --from=build --chown=appuser:appgroup /app/target/quarkus-app/app/ /app/app/
+COPY --from=build --chown=appuser:appgroup /app/target/quarkus-app/quarkus/ /app/quarkus/
+
+# Cloud Run usa a variável PORT (padrão 8080)
+# O Quarkus lê QUARKUS_HTTP_PORT automaticamente
+ENV QUARKUS_PROFILE=prod
+
+# Expose port (Cloud Run ignora isso, mas é boa prática)
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+# Run the application
+# Cloud Run define PORT, então mapeamos para QUARKUS_HTTP_PORT
+# O application.properties já está configurado para usar ${PORT:8080} no perfil prod
+ENTRYPOINT ["sh", "-c", "export QUARKUS_HTTP_PORT=${PORT:-8080} && java -jar /app/quarkus-run.jar"]

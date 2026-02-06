@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: autoflex-postgres
+    environment:
+      - POSTGRES_USER=autoflex
+      - POSTGRES_PASSWORD=autoflex123
+      - POSTGRES_DB=autoflex
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoflex -d autoflex"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - autoflex-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autoflex-backend
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_USERNAME=autoflex
+      - DB_PASSWORD=autoflex123
+      - DB_URL=jdbc:postgresql://postgres:5432/autoflex
+      - QUARKUS_PROFILE=docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - autoflex-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  postgres-data:
+
+networks:
+  autoflex-network:
+    driver: bridge
