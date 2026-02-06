@@ -1,5 +1,4 @@
 import { productService } from '../productService';
-import { Product } from '@/types/product';
 
 describe('productService', () => {
   beforeEach(() => {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TextField, Box, Button } from '@mui/material';
+import { TextField, Box } from '@mui/material';
 import { useI18n } from '@/i18n';
 import {
   RawMaterial,
@@ -10,14 +10,13 @@ import {
 interface RawMaterialFormProps {
   rawMaterial?: RawMaterial;
   onSubmit: (data: CreateRawMaterialRequest | UpdateRawMaterialRequest) => void;
-  onCancel: () => void;
+  onCancel?: () => void;
   loading?: boolean;
 }
 
 export const RawMaterialForm = ({
   rawMaterial,
   onSubmit,
-  onCancel,
   loading = false,
 }: RawMaterialFormProps) => {
   const { t } = useI18n();

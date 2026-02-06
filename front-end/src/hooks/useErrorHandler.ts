@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useAppDispatch } from '@/store/hooks';
 import { addToast } from '@/store/slices/toastSlice';
-import { parseErrorResponse, getStatusMessage } from '@/utils/errorHandler';
+import { parseErrorResponse } from '@/utils/errorHandler';
 import { ApiError } from '@/types/api';
 
 export function useErrorHandler() {

@@ -22,7 +22,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -417,7 +416,7 @@ export const ProductList = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredItems.map((product, index) => (
+              {filteredItems.map((product) => (
                 <TableRow key={product.code}>
                   <TableCell
                     sx={{

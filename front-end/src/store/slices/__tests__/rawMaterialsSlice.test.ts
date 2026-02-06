@@ -12,6 +12,7 @@ describe('rawMaterialsSlice', () => {
     items: [],
     loading: false,
     error: null,
+    pagination: null,
   };
 
   it('should return the initial state', () => {
@@ -52,6 +53,7 @@ describe('rawMaterialsSlice', () => {
       items: [{ code: 'RM001', name: 'Raw Material A', stockQuantity: 100 }],
       loading: false,
       error: null,
+      pagination: null,
     };
     const updatedRawMaterial: RawMaterial = {
       code: 'RM001',
@@ -68,6 +70,7 @@ describe('rawMaterialsSlice', () => {
       items: [{ code: 'RM001', name: 'Raw Material A', stockQuantity: 100 }],
       loading: false,
       error: null,
+      pagination: null,
     };
     const action = { type: deleteRawMaterial.fulfilled.type, payload: 'RM001' };
     const state = rawMaterialsReducer(existingState, action);

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent, Box, Typography, Chip } from '@mui/material';
 import { useI18n } from '@/i18n';
 import { ProductionSuggestion } from '@/types/production';

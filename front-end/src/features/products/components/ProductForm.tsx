@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { TextField, Box, Button } from '@mui/material';
+import { TextField, Box } from '@mui/material';
 import { useI18n } from '@/i18n';
 import { Product, CreateProductRequest, UpdateProductRequest } from '@/types/product';
 
 interface ProductFormProps {
   product?: Product;
   onSubmit: (data: CreateProductRequest | UpdateProductRequest) => void;
-  onCancel: () => void;
+  onCancel?: () => void;
   loading?: boolean;
 }
 
-export const ProductForm = ({ product, onSubmit, onCancel, loading = false }: ProductFormProps) => {
+export const ProductForm = ({ product, onSubmit, loading = false }: ProductFormProps) => {
   const { t } = useI18n();
   const [name, setName] = useState('');
   const [value, setValue] = useState('');

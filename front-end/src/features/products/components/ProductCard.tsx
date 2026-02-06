@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Card, CardContent, Box, Typography, IconButton, Chip } from '@mui/material';
+import { Card, CardContent, Box, Typography, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SettingsIcon from '@mui/icons-material/Settings';

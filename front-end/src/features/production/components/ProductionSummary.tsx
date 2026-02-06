@@ -1,4 +1,3 @@
-import React from 'react';
 import { Paper, Typography, Box, Grid } from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import FactoryIcon from '@mui/icons-material/Factory';

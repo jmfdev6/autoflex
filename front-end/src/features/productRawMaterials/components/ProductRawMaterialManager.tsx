@@ -16,7 +16,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -37,12 +36,11 @@ import { ProductRawMaterial } from '@/types/productRawMaterial';
 
 interface ProductRawMaterialManagerProps {
   productCode: string;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export const ProductRawMaterialManager = ({
   productCode,
-  onClose,
 }: ProductRawMaterialManagerProps) => {
   const dispatch = useAppDispatch();
   const { t } = useI18n();

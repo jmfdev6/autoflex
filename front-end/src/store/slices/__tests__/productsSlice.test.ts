@@ -7,6 +7,7 @@ describe('productsSlice', () => {
     items: [],
     loading: false,
     error: null,
+    pagination: null,
   };
 
   it('should return the initial state', () => {
@@ -43,6 +44,7 @@ describe('productsSlice', () => {
       items: [{ code: 'P001', name: 'Product A', value: 100 }],
       loading: false,
       error: null,
+      pagination: null,
     };
     const updatedProduct: Product = { code: 'P001', name: 'Product A Updated', value: 150 };
     const action = { type: updateProduct.fulfilled.type, payload: updatedProduct };
@@ -55,6 +57,7 @@ describe('productsSlice', () => {
       items: [{ code: 'P001', name: 'Product A', value: 100 }],
       loading: false,
       error: null,
+      pagination: null,
     };
     const action = { type: deleteProduct.fulfilled.type, payload: 'P001' };
     const state = productsReducer(existingState, action);
