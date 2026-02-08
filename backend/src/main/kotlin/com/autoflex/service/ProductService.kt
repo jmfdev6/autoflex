@@ -25,20 +25,14 @@ class ProductService(
     
     fun getAllPaginated(pageRequest: PageRequest): PageResponse<ProductDto> {
         val sortField = pageRequest.getSortField()
-        val query = productRepository.findAll()
+        val direction = if (pageRequest.isAscending()) "ASC" else "DESC"
         
-        // Aplicar ordenação
-        val sortedQuery = if (pageRequest.isAscending()) {
-            query.orderBy(sortField)
-        } else {
-            query.orderBy("$sortField desc")
-        }
+        // Criar query com ordenação e paginação usando find() com HQL
+        val page = productRepository.find("ORDER BY $sortField $direction")
+            .page(pageRequest.page, pageRequest.size)
         
-        // Paginar
-        val page = sortedQuery.page(pageRequest.page, pageRequest.size)
         val totalElements = productRepository.count()
-        
-        val content = page.list().map { it.toDto() }
+        val content = page.list().map { product: Product -> product.toDto() }
         
         return PageResponse.of(
             content = content,

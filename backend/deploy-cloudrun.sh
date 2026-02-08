@@ -76,10 +76,8 @@ docker push ${IMAGE_NAME}:latest
 # Verificar se o serviço já existe
 if gcloud run services describe ${SERVICE_NAME} --region=${REGION} --format="value(name)" &> /dev/null; then
     echo -e "${YELLOW}Serviço já existe. Atualizando...${NC}"
-    UPDATE_FLAG="--update-env-vars"
 else
     echo -e "${YELLOW}Criando novo serviço...${NC}"
-    UPDATE_FLAG=""
 fi
 
 # Deploy no Cloud Run
@@ -143,8 +141,7 @@ gcloud run deploy ${SERVICE_NAME} \
     --min-instances 0 \
     --max-instances 10 \
     --timeout 300 \
-    --env-vars-file ${ENV_FILE} \
-    ${UPDATE_FLAG}
+    --env-vars-file ${ENV_FILE}
 
 # Obter URL do serviço
 SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} --region=${REGION} --format="value(status.url)")

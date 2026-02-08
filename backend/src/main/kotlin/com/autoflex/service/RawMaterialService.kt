@@ -23,20 +23,14 @@ class RawMaterialService(
     
     fun getAllPaginated(pageRequest: PageRequest): PageResponse<RawMaterialDto> {
         val sortField = pageRequest.getSortField()
-        val query = rawMaterialRepository.findAll()
+        val direction = if (pageRequest.isAscending()) "ASC" else "DESC"
         
-        // Aplicar ordenação
-        val sortedQuery = if (pageRequest.isAscending()) {
-            query.orderBy(sortField)
-        } else {
-            query.orderBy("$sortField desc")
-        }
+        // Criar query com ordenação e paginação usando find() com HQL
+        val page = rawMaterialRepository.find("ORDER BY $sortField $direction")
+            .page(pageRequest.page, pageRequest.size)
         
-        // Paginar
-        val page = sortedQuery.page(pageRequest.page, pageRequest.size)
         val totalElements = rawMaterialRepository.count()
-        
-        val content = page.list().map { it.toDto() }
+        val content = page.list().map { rawMaterial: RawMaterial -> rawMaterial.toDto() }
         
         return PageResponse.of(
             content = content,
