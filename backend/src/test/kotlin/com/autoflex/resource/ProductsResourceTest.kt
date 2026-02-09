@@ -4,6 +4,7 @@ import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import org.hamcrest.CoreMatchers.*
+import org.hamcrest.Matchers.lessThanOrEqualTo
 import org.junit.jupiter.api.Test
 
 @QuarkusTest
@@ -157,5 +158,105 @@ class ProductsResourceTest {
             .`when`().get("/api/products/$code")
             .then()
             .statusCode(404)
+    }
+    
+    @Test
+    fun `should get paginated products`() {
+        // Create multiple products first
+        repeat(5) { index ->
+            val createBody = """
+                {
+                    "name": "Product $index",
+                    "value": ${index * 10}.00
+                }
+            """.trimIndent()
+            
+            given()
+                .contentType(ContentType.JSON)
+                .body(createBody)
+                .`when`().post("/api/products")
+                .then()
+                .statusCode(201)
+        }
+        
+        // Get paginated
+        given()
+            .queryParam("page", 0)
+            .queryParam("size", 3)
+            .queryParam("sort", "code")
+            .`when`().get("/api/products")
+            .then()
+            .statusCode(200)
+            .body("success", equalTo(true))
+            .body("data.content", notNullValue())
+            .body("data.content.size()", lessThanOrEqualTo(3))
+    }
+    
+    @Test
+    fun `should return 400 when updating with invalid data`() {
+        // First create a product
+        val createBody = """
+            {
+                "name": "Test Product",
+                "value": 100.00
+            }
+        """.trimIndent()
+        
+        val code = given()
+            .contentType(ContentType.JSON)
+            .body(createBody)
+            .`when`().post("/api/products")
+            .then()
+            .extract().path<String>("data.code")
+        
+        // Try to update with invalid data
+        val updateBody = """
+            {
+                "name": "",
+                "value": -10
+            }
+        """.trimIndent()
+        
+        given()
+            .contentType(ContentType.JSON)
+            .body(updateBody)
+            .`when`().put("/api/products/$code")
+            .then()
+            .statusCode(400)
+    }
+    
+    @Test
+    fun `should handle partial update`() {
+        // First create a product
+        val createBody = """
+            {
+                "name": "Original Name",
+                "value": 100.00
+            }
+        """.trimIndent()
+        
+        val code = given()
+            .contentType(ContentType.JSON)
+            .body(createBody)
+            .`when`().post("/api/products")
+            .then()
+            .extract().path<String>("data.code")
+        
+        // Update only name
+        val updateBody = """
+            {
+                "name": "Updated Name"
+            }
+        """.trimIndent()
+        
+        given()
+            .contentType(ContentType.JSON)
+            .body(updateBody)
+            .`when`().put("/api/products/$code")
+            .then()
+            .statusCode(200)
+            .body("success", equalTo(true))
+            .body("data.name", equalTo("Updated Name"))
+            .body("data.value", equalTo(100.00f))
     }
 }

@@ -1,1 +1,133 @@
+# ============================================
+# AUTOFLEX - .gitignore
+# ============================================
+
+# ===== SENSÍVEIS =====
+# Chaves e certificados
+*.pem
+!publicKey.pem.example
+privateKey.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# Arquivos de ambiente
+.env
+.env.*
+!.env.example
+.env.local
+.env.production
+.env.development
+.env.cloudrun
+.env.test
+
+# Secrets e credenciais
+secrets/
+credentials/
+*.secret
+config/secrets.properties
+
+# ===== COMPILADOS E BUILDS =====
+# Backend
+backend/target/
+backend/*.jar
+backend/*.war
+backend/generated-sources/
+
+# Frontend
+front-end/node_modules/
+front-end/dist/
+front-end/dist-ssr/
+front-end/.next/
+front-end/build/
+front-end/.vite/
+
+# ===== LOGS E TEMPORÁRIOS =====
+*.log
+logs/
+*.tmp
+*.bak
+*.swp
+*~
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===== CACHE =====
+.m2/
+.gradle/
+.npm/
+.yarn/
+.pnp/
+.cache/
+.parcel-cache/
+
+# ===== COBERTURA E TESTES =====
+coverage/
+.nyc_output/
+*.lcov
+.nyc_output/
+cypress/videos/
+cypress/screenshots/
+junit.xml
+
+# ===== IDEs =====
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata
+bin/
+tmp/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# ===== SISTEMA OPERACIONAL =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===== DEPLOY E CLOUD =====
 .vercel
+.netlify
+.serverless/
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# ===== DOCKER =====
+docker-compose.override.yml
+.dockerignore
+
+# ===== OUTROS =====
+*.class
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.pytest_cache/
+.mypy_cache/

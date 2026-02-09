@@ -91,13 +91,34 @@ class InsufficientStockExceptionMapper : ExceptionMapper<InsufficientStockExcept
 }
 
 @Provider
+class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
+    override fun toResponse(exception: UnauthorizedException): Response {
+        return Response.status(Response.Status.UNAUTHORIZED)
+            .entity(
+                ErrorResponse(
+                    message = exception.message ?: "Unauthorized",
+                    code = "UNAUTHORIZED"
+                )
+            )
+            .build()
+    }
+}
+
+@Provider
 class GenericExceptionMapper : ExceptionMapper<Exception> {
     override fun toResponse(exception: Exception): Response {
+        // Log do erro para debug (em produção, será logado automaticamente pelo Quarkus)
+        exception.printStackTrace()
+        
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
             .entity(
                 ErrorResponse(
-                    message = "An internal error occurred",
-                    code = "INTERNAL_ERROR"
+                    message = exception.message ?: "An internal error occurred",
+                    code = "INTERNAL_ERROR",
+                    details = mapOf(
+                        "exceptionType" to exception.javaClass.simpleName,
+                        "message" to (exception.message ?: "No message available")
+                    )
                 )
             )
             .build()

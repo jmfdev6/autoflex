@@ -32,7 +32,7 @@ class ProductRawMaterialsResource @Inject constructor(
     @APIResponse(
         responseCode = "200",
         description = "Lista de associações retornada com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "404",
@@ -56,7 +56,7 @@ class ProductRawMaterialsResource @Inject constructor(
     @APIResponse(
         responseCode = "201",
         description = "Associação criada com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "400",
@@ -89,7 +89,7 @@ class ProductRawMaterialsResource @Inject constructor(
     @APIResponse(
         responseCode = "200",
         description = "Associação atualizada com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "404",
@@ -123,7 +123,7 @@ class ProductRawMaterialsResource @Inject constructor(
     @APIResponse(
         responseCode = "200",
         description = "Associação removida com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "404",

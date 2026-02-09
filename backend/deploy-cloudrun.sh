@@ -130,18 +130,39 @@ if [ -f .env.cloudrun ]; then
 fi
 
 # Deploy
+# Aumentando memória e CPU para startup mais rápido
+# Timeout de request aumentado para 300s
+# Nota: Cloud Run tem timeout de startup padrão de 240s, mas não pode ser configurado via flag
+# O timeout de startup é controlado automaticamente pelo Cloud Run
 gcloud run deploy ${SERVICE_NAME} \
     --image ${IMAGE_NAME}:latest \
     --region ${REGION} \
     --platform managed \
     --allow-unauthenticated \
     --port 8080 \
-    --memory 512Mi \
-    --cpu 1 \
+    --memory 1Gi \
+    --cpu 2 \
     --min-instances 0 \
     --max-instances 10 \
     --timeout 300 \
     --env-vars-file ${ENV_FILE}
+
+# Garantir que o serviço está público (IAM policy)
+echo -e "${YELLOW}Garantindo que o serviço está público...${NC}"
+gcloud run services add-iam-policy-binding ${SERVICE_NAME} \
+    --member="allUsers" \
+    --role="roles/run.invoker" \
+    --region=${REGION} \
+    --quiet || echo -e "${YELLOW}Aviso: IAM policy pode já estar configurada.${NC}"
+
+# Verificar IAM policy
+echo -e "${YELLOW}Verificando IAM policy...${NC}"
+IAM_CHECK=$(gcloud run services get-iam-policy ${SERVICE_NAME} --region=${REGION} --format="value(bindings[0].members[0])" 2>/dev/null || echo "")
+if [[ "$IAM_CHECK" == "allUsers" ]]; then
+    echo -e "${GREEN}✓ Serviço está público (allUsers tem acesso)${NC}"
+else
+    echo -e "${YELLOW}⚠ Verifique manualmente a IAM policy do serviço${NC}"
+fi
 
 # Obter URL do serviço
 SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} --region=${REGION} --format="value(status.url)")

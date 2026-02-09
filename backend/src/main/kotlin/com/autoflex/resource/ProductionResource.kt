@@ -34,7 +34,7 @@ class ProductionResource @Inject constructor(
     @APIResponse(
         responseCode = "200",
         description = "Sugestões de produção calculadas com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     fun getProductionSuggestions(): Response {
         val summary = productionService.getProductionSuggestions()
@@ -58,7 +58,7 @@ class ProductionResource @Inject constructor(
     @APIResponse(
         responseCode = "200",
         description = "Produção confirmada (pode conter itens com falha)",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "400",

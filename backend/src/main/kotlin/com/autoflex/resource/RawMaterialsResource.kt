@@ -33,7 +33,7 @@ class RawMaterialsResource @Inject constructor(
     @APIResponse(
         responseCode = "200",
         description = "Lista de matérias-primas retornada com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     fun getAll(
         @BeanParam pageRequest: PageRequest
@@ -70,7 +70,7 @@ class RawMaterialsResource @Inject constructor(
     @APIResponse(
         responseCode = "200",
         description = "Matéria-prima encontrada",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "404",
@@ -94,7 +94,7 @@ class RawMaterialsResource @Inject constructor(
     @APIResponse(
         responseCode = "201",
         description = "Matéria-prima criada com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "400",
@@ -120,7 +120,7 @@ class RawMaterialsResource @Inject constructor(
     @APIResponse(
         responseCode = "200",
         description = "Matéria-prima atualizada com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "404",
@@ -153,7 +153,7 @@ class RawMaterialsResource @Inject constructor(
     @APIResponse(
         responseCode = "200",
         description = "Matéria-prima deletada com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "404",

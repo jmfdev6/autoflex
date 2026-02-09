@@ -1,14 +1,42 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '@mui/material';
 import { store } from './store/store';
 import { I18nProvider } from './i18n';
 import { Layout } from './components/common/Layout';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Toast } from './components/common/Toast';
-import { ProductList } from './features/products/components/ProductList';
-import { RawMaterialList } from './features/rawMaterials/components/RawMaterialList';
-import { ProductionSuggestions } from './features/production/components/ProductionSuggestions';
+
+// Lazy load routes for code splitting
+// Using dynamic imports with proper named export handling
+const ProductList = lazy(() => 
+  import('./features/products/components/ProductList').then(module => ({ 
+    default: module.ProductList 
+  }))
+);
+const RawMaterialList = lazy(() => 
+  import('./features/rawMaterials/components/RawMaterialList').then(module => ({ 
+    default: module.RawMaterialList 
+  }))
+);
+const ProductionSuggestions = lazy(() => 
+  import('./features/production/components/ProductionSuggestions').then(module => ({ 
+    default: module.ProductionSuggestions 
+  }))
+);
+
+// Loading component for Suspense fallback
+const LoadingFallback = () => (
+  <Box
+    display="flex"
+    justifyContent="center"
+    alignItems="center"
+    minHeight="400px"
+  >
+    <CircularProgress />
+  </Box>
+);
 
 const theme = createTheme({
   palette: {
@@ -215,12 +243,14 @@ function App() {
               }}
             >
               <Layout>
-                <Routes>
-                  <Route path="/" element={<Navigate to="/products" replace />} />
-                  <Route path="/products" element={<ProductList />} />
-                  <Route path="/raw-materials" element={<RawMaterialList />} />
-                  <Route path="/production" element={<ProductionSuggestions />} />
-                </Routes>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/products" replace />} />
+                    <Route path="/products" element={<ProductList />} />
+                    <Route path="/raw-materials" element={<RawMaterialList />} />
+                    <Route path="/production" element={<ProductionSuggestions />} />
+                  </Routes>
+                </Suspense>
                 <Toast />
               </Layout>
             </BrowserRouter>

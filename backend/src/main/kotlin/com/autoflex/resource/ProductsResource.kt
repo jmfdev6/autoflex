@@ -29,12 +29,20 @@ class ProductsResource @Inject constructor(
     @GET
     @Operation(
         summary = "Listar produtos",
-        description = "Retorna uma lista paginada de produtos. Use os parâmetros page, size e sort para paginação."
+        description = "Retorna uma lista de produtos. Use page, size e sort para paginação. Cache: 5 minutos."
     )
     @APIResponse(
         responseCode = "200",
         description = "Lista de produtos retornada com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(
+            schema = Schema(),
+            mediaType = "application/json",
+            example = "{\"success\": true, \"data\": [{\"code\": \"P001\", \"name\": \"Bicicleta\", \"value\": 200.00}]}"
+        )]
+    )
+    @APIResponse(
+        responseCode = "401",
+        description = "Não autenticado - token JWT inválido ou ausente"
     )
     fun getAll(
         @BeanParam pageRequest: PageRequest
@@ -66,16 +74,26 @@ class ProductsResource @Inject constructor(
     @Path("/{code}")
     @Operation(
         summary = "Buscar produto por código",
-        description = "Retorna um produto específico baseado no código fornecido"
+        description = "Retorna um produto específico baseado no código fornecido. Cache: 10 minutos."
     )
     @APIResponse(
         responseCode = "200",
         description = "Produto encontrado",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(
+            schema = Schema(),
+            mediaType = "application/json",
+        )]
     )
     @APIResponse(
         responseCode = "404",
-        description = "Produto não encontrado"
+        description = "Produto não encontrado",
+        content = [Content(
+            mediaType = "application/json",
+        )]
+    )
+    @APIResponse(
+        responseCode = "401",
+        description = "Não autenticado - token JWT inválido ou ausente"
     )
     fun getByCode(@PathParam("code") code: String): Response {
         val product = productService.getByCode(code)
@@ -90,16 +108,26 @@ class ProductsResource @Inject constructor(
     @POST
     @Operation(
         summary = "Criar novo produto",
-        description = "Cria um novo produto no sistema. O código é gerado automaticamente."
+        description = "Cria um novo produto. Código gerado automaticamente (P001, P002...). Cache invalidado após criação."
     )
     @APIResponse(
         responseCode = "201",
         description = "Produto criado com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(
+            schema = Schema(),
+            mediaType = "application/json",
+        )]
     )
     @APIResponse(
         responseCode = "400",
-        description = "Dados inválidos fornecidos"
+        description = "Dados inválidos fornecidos",
+        content = [Content(
+            mediaType = "application/json",
+        )]
+    )
+    @APIResponse(
+        responseCode = "401",
+        description = "Não autenticado - token JWT inválido ou ausente"
     )
     fun create(@Valid request: CreateProductRequest): Response {
         val product = productService.create(request)
@@ -116,12 +144,12 @@ class ProductsResource @Inject constructor(
     @Path("/{code}")
     @Operation(
         summary = "Atualizar produto",
-        description = "Atualiza os dados de um produto existente. Campos não fornecidos não serão alterados."
+        description = "Atualiza um produto existente. Campos null não são alterados. Cache invalidado após atualização."
     )
     @APIResponse(
         responseCode = "200",
         description = "Produto atualizado com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "404",
@@ -149,12 +177,12 @@ class ProductsResource @Inject constructor(
     @Path("/{code}")
     @Operation(
         summary = "Deletar produto",
-        description = "Remove um produto do sistema. Também remove todas as associações com matérias-primas."
+        description = "Remove um produto do sistema. Remove associações com matérias-primas. Operação irreversível."
     )
     @APIResponse(
         responseCode = "200",
         description = "Produto deletado com sucesso",
-        content = [Content(schema = Schema(implementation = ApiResponse::class))]
+        content = [Content(schema = Schema())]
     )
     @APIResponse(
         responseCode = "404",

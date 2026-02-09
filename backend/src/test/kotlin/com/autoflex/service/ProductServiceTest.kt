@@ -123,4 +123,94 @@ class ProductServiceTest {
         
         assertNull(productRepository.findByCode("P001"))
     }
+    
+    @Test
+    @Transactional
+    fun `should get paginated products`() {
+        // Create multiple products
+        repeat(15) { index ->
+            val product = Product().apply {
+                code = "P${String.format("%03d", index + 1)}"
+                name = "Product $index"
+                value = BigDecimal("${index * 10}.00")
+            }
+            productRepository.persist(product)
+        }
+        
+        val pageRequest = com.autoflex.dto.PageRequest().apply {
+            page = 0
+            size = 10
+            sort = "code"
+        }
+        
+        val result = productService.getAllPaginated(pageRequest)
+        
+        assertEquals(10, result.content.size)
+        assertEquals(15, result.totalElements)
+        assertEquals(0, result.page)
+        assertEquals(10, result.size)
+    }
+    
+    @Test
+    @Transactional
+    fun `should update product partially`() {
+        val product = Product().apply {
+            code = "P001"
+            name = "Original Name"
+            value = BigDecimal("100.00")
+        }
+        productRepository.persist(product)
+        
+        // Update only name
+        val request = UpdateProductRequest(
+            name = "Updated Name",
+            value = null
+        )
+        
+        val result = productService.update("P001", request)
+        
+        assertEquals("Updated Name", result.name)
+        assertEquals(BigDecimal("100.00"), result.value) // Value should remain unchanged
+    }
+    
+    @Test
+    @Transactional
+    fun `should throw NotFoundException when updating non-existent product`() {
+        val request = UpdateProductRequest(
+            name = "New Name",
+            value = BigDecimal("200.00")
+        )
+        
+        assertThrows(NotFoundException::class.java) {
+            productService.update("NONEXISTENT", request)
+        }
+    }
+    
+    @Test
+    @Transactional
+    fun `should throw NotFoundException when deleting non-existent product`() {
+        assertThrows(NotFoundException::class.java) {
+            productService.delete("NONEXISTENT")
+        }
+    }
+    
+    @Test
+    @Transactional
+    fun `should generate unique product codes`() {
+        val request1 = CreateProductRequest(
+            name = "Product 1",
+            value = BigDecimal("100.00")
+        )
+        val request2 = CreateProductRequest(
+            name = "Product 2",
+            value = BigDecimal("200.00")
+        )
+        
+        val product1 = productService.create(request1)
+        val product2 = productService.create(request2)
+        
+        assertNotEquals(product1.code, product2.code)
+        assertTrue(product1.code.startsWith("P"))
+        assertTrue(product2.code.startsWith("P"))
+    }
 }

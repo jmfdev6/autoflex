@@ -31,17 +31,19 @@ COPY --from=build --chown=appuser:appgroup /app/target/quarkus-app/app/ /app/app
 COPY --from=build --chown=appuser:appgroup /app/target/quarkus-app/quarkus/ /app/quarkus/
 
 # Cloud Run usa a variável PORT (padrão 8080)
-# O Quarkus lê QUARKUS_HTTP_PORT automaticamente
+# Força o Quarkus a ouvir em todos os IPs (necessário para Cloud Run)
 ENV QUARKUS_PROFILE=prod
+ENV QUARKUS_HTTP_HOST=0.0.0.0
 
 # Expose port (Cloud Run ignora isso, mas é boa prática)
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+# Health check (Cloud Run usa seu próprio health check, mas mantemos para desenvolvimento)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-8080}/health || exit 1
 
 # Run the application
-# Cloud Run define PORT, então mapeamos para QUARKUS_HTTP_PORT
-# O application.properties já está configurado para usar ${PORT:8080} no perfil prod
-ENTRYPOINT ["sh", "-c", "export QUARKUS_HTTP_PORT=${PORT:-8080} && java -jar /app/quarkus-run.jar"]
+# Usar shell para ler PORT em runtime (Cloud Run define PORT dinamicamente)
+# Remover colchetes para permitir que o shell processe a variável PORT
+# Adicionar flags JVM para startup mais rápido e uso eficiente de memória
+ENTRYPOINT java -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Dquarkus.http.host=0.0.0.0 -Dquarkus.http.port=${PORT:-8080} -jar /app/quarkus-run.jar
