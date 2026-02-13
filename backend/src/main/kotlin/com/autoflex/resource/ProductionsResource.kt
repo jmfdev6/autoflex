@@ -2,6 +2,8 @@ package com.autoflex.resource
 
 import com.autoflex.dto.ApiResponse
 import com.autoflex.dto.ConfirmProductionRequest
+import com.autoflex.dto.ProductionResponseDto
+import com.autoflex.exception.BadRequestException
 import com.autoflex.exception.ConcurrencyException
 import com.autoflex.exception.InsufficientStockException
 import com.autoflex.service.ProductionService
@@ -16,44 +18,44 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse
 import org.eclipse.microprofile.openapi.annotations.tags.Tag
 
-@Path("/production")
+@Path("/productions")
 @Produces(MediaType.APPLICATION_JSON)
-@Tag(name = "Production", description = "API para sugestões de produção baseadas no estoque disponível")
-class ProductionResource @Inject constructor(
+@Consumes(MediaType.APPLICATION_JSON)
+@Tag(name = "Productions", description = "API para criar e confirmar produções")
+class ProductionsResource @Inject constructor(
     private val productionService: ProductionService
 ) {
-    
-    @GET
-    @Path("/suggestions")
+
+    @POST
     @Operation(
-        summary = "Obter sugestões de produção",
-        description = "Retorna uma lista de produtos que podem ser produzidos com as matérias-primas disponíveis em estoque. " +
-                "Os produtos são priorizados por valor (maior para menor). " +
-                "O algoritmo considera que uma matéria-prima pode ser usada em múltiplos produtos."
+        summary = "Criar produção",
+        description = "Cria uma nova produção em estado PENDING com a lista de itens (productCode, quantity). Use POST /productions/{id}/confirm para confirmar e consumir estoque."
     )
     @APIResponse(
-        responseCode = "200",
-        description = "Sugestões de produção calculadas com sucesso",
+        responseCode = "201",
+        description = "Produção criada com sucesso",
         content = [Content(schema = Schema())]
     )
-    fun getProductionSuggestions(): Response {
-        val summary = productionService.getProductionSuggestions()
-        return Response.ok(
+    @APIResponse(
+        responseCode = "400",
+        description = "Dados inválidos"
+    )
+    fun create(@Valid request: ConfirmProductionRequest): Response {
+        val production = productionService.createProduction(request)
+        return Response.status(Response.Status.CREATED).entity(
             ApiResponse(
                 success = true,
-                data = summary
+                data = production,
+                message = "Production created successfully"
             )
         ).build()
     }
-    
+
     @POST
-    @Path("/confirm")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{id}/confirm")
     @Operation(
         summary = "Confirmar produção",
-        description = "Confirma a produção de produtos, atualizando o estoque de matérias-primas. " +
-                "Utiliza locks pessimistas e versioning otimista para garantir consistência em ambiente multiusuário. " +
-                "Retorna resultado detalhado de cada item, incluindo sucessos e falhas."
+        description = "Confirma a produção pelo id, consumindo estoque de matérias-primas. A produção deve estar em PENDING."
     )
     @APIResponse(
         responseCode = "200",
@@ -62,24 +64,24 @@ class ProductionResource @Inject constructor(
     )
     @APIResponse(
         responseCode = "400",
-        description = "Dados inválidos fornecidos"
+        description = "Produção já confirmada ou dados inválidos"
+    )
+    @APIResponse(
+        responseCode = "404",
+        description = "Produção não encontrada"
     )
     @APIResponse(
         responseCode = "409",
-        description = "Conflito de concorrência detectado"
+        description = "Conflito de concorrência"
     )
-    fun confirmProduction(@Valid request: ConfirmProductionRequest): Response {
+    fun confirm(@PathParam("id") id: Long): Response {
         return try {
-            val result = productionService.confirmProduction(request)
-            
-            val status = if (result.failureCount == 0) {
-                Response.Status.OK
-            } else if (result.successCount == 0) {
-                Response.Status.BAD_REQUEST
-            } else {
-                Response.Status.ACCEPTED // Parcialmente processado
+            val result = productionService.confirmProductionById(id)
+            val status = when {
+                result.failureCount == 0 -> Response.Status.OK
+                result.successCount == 0 -> Response.Status.BAD_REQUEST
+                else -> Response.Status.ACCEPTED
             }
-            
             Response.status(status).entity(
                 ApiResponse(
                     success = result.failureCount == 0,
@@ -107,6 +109,14 @@ class ProductionResource @Inject constructor(
                     success = false,
                     data = null,
                     message = e.message ?: "Insufficient stock"
+                )
+            ).build()
+        } catch (e: BadRequestException) {
+            Response.status(Response.Status.BAD_REQUEST).entity(
+                ApiResponse(
+                    success = false,
+                    data = null,
+                    message = e.message ?: "Bad request"
                 )
             ).build()
         } catch (e: Exception) {

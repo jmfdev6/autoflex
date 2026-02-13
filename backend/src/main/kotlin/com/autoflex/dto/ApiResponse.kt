@@ -9,6 +9,6 @@ data class ApiResponse<T>(
 data class ErrorResponse(
     val success: Boolean = false,
     val message: String,
-    val code: String? = null,
+    val errorCode: String? = null,
     val details: Map<String, Any>? = null
 )

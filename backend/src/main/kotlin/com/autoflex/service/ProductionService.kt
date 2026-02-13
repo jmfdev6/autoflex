@@ -2,12 +2,17 @@ package com.autoflex.service
 
 import com.autoflex.dto.*
 import com.autoflex.entity.Product
+import com.autoflex.entity.Production
+import com.autoflex.entity.ProductionItem
+import com.autoflex.entity.ProductionStatus
+import com.autoflex.exception.BadRequestException
 import com.autoflex.exception.ConcurrencyException
 import com.autoflex.exception.InsufficientStockException
 import com.autoflex.exception.NotFoundException
 import com.autoflex.repository.ProductRepository
 import com.autoflex.repository.RawMaterialRepository
 import com.autoflex.repository.ProductRawMaterialRepository
+import com.autoflex.repository.ProductionRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.hibernate.StaleObjectStateException
@@ -18,8 +23,48 @@ import java.math.RoundingMode
 class ProductionService(
     private val productRepository: ProductRepository,
     private val rawMaterialRepository: RawMaterialRepository,
-    private val productRawMaterialRepository: ProductRawMaterialRepository
+    private val productRawMaterialRepository: ProductRawMaterialRepository,
+    private val productionRepository: ProductionRepository
 ) {
+    
+    @Transactional
+    fun createProduction(request: ConfirmProductionRequest): ProductionResponseDto {
+        val production = Production().apply {
+            status = ProductionStatus.PENDING
+            createdAt = java.time.Instant.now()
+        }
+        for (item in request.items) {
+            val pi = ProductionItem().apply {
+                this.production = production
+                productCode = item.productCode
+                quantity = item.quantity
+            }
+            production.items.add(pi)
+        }
+        productionRepository.persist(production)
+        return ProductionResponseDto(
+            id = production.id!!,
+            status = production.status.name,
+            items = production.items.map { ProductionItemDto(it.productCode, it.quantity) },
+            createdAt = production.createdAt.toString()
+        )
+    }
+    
+    @Transactional
+    fun confirmProductionById(id: Long): ConfirmProductionResponse {
+        val production = productionRepository.findById(id)
+            ?: throw NotFoundException("Production with id $id not found", "PRODUCTION_NOT_FOUND")
+        if (production.status != ProductionStatus.PENDING) {
+            throw BadRequestException("Production $id is already confirmed or invalid")
+        }
+        val request = ConfirmProductionRequest(
+            items = production.items.map { ProductionItemRequest(it.productCode, it.quantity) }
+        )
+        val response = confirmProduction(request)
+        production.status = ProductionStatus.CONFIRMED
+        productionRepository.persist(production)
+        return response
+    }
     
     @Transactional
     fun getProductionSuggestions(): ProductionSummaryDto {
@@ -150,13 +195,13 @@ class ProductionService(
     private fun confirmProductionItem(item: ProductionItemRequest): ConfirmProductionItemResult {
         // Buscar produto
         val product = productRepository.findByCode(item.productCode)
-            ?: throw NotFoundException("Product with code ${item.productCode} not found")
+            ?: throw NotFoundException("Product with code ${item.productCode} not found", "PRODUCT_NOT_FOUND")
         
         // Buscar associações do produto
         val associations = productRawMaterialRepository.findByProductCode(item.productCode)
         
         if (associations.isEmpty()) {
-            throw NotFoundException("No raw materials associated with product ${item.productCode}")
+            throw NotFoundException("No raw materials associated with product ${item.productCode}", "PRODUCT_RAW_MATERIAL_NOT_FOUND")
         }
         
         // Validar estoque disponível com locks pessimistas
@@ -164,7 +209,7 @@ class ProductionService(
         
         for (association in associations) {
             val rawMaterial = rawMaterialRepository.findByCodeWithLock(association.rawMaterialCode)
-                ?: throw NotFoundException("Raw material ${association.rawMaterialCode} not found")
+                ?: throw NotFoundException("Raw material ${association.rawMaterialCode} not found", "RAW_MATERIAL_NOT_FOUND")
             
             val requiredQuantity = association.quantity.multiply(BigDecimal(item.quantity))
             val availableQuantity = rawMaterial.stockQuantity
@@ -188,7 +233,7 @@ class ProductionService(
         try {
             for ((rawMaterialCode, newStock) in stockUpdates) {
                 val rawMaterial = rawMaterialRepository.findByCodeWithLock(rawMaterialCode)
-                    ?: throw NotFoundException("Raw material $rawMaterialCode not found")
+                    ?: throw NotFoundException("Raw material $rawMaterialCode not found", "RAW_MATERIAL_NOT_FOUND")
                 
                 rawMaterial.stockQuantity = newStock
                 rawMaterialRepository.persist(rawMaterial)

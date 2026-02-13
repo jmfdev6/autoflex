@@ -33,6 +33,8 @@ export async function parseErrorResponse(response: Response): Promise<ApiError> 
   let message = 'An error occurred';
   let details: unknown = null;
 
+  let errorCode: string | undefined;
+
   try {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
@@ -42,6 +44,7 @@ export async function parseErrorResponse(response: Response): Promise<ApiError> 
       } else if (typeof data === 'string') {
         message = data;
       }
+      errorCode = data.errorCode ?? data.code;
       details = data;
     } else {
       message = await response.text() || message;
@@ -53,6 +56,7 @@ export async function parseErrorResponse(response: Response): Promise<ApiError> 
 
   return {
     message,
+    errorCode,
     code: response.status.toString(),
     details,
   };

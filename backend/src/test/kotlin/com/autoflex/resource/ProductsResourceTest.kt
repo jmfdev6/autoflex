@@ -11,13 +11,18 @@ import org.junit.jupiter.api.Test
 class ProductsResourceTest {
     
     @Test
-    fun `should get all products`() {
+    fun `should get all products paginated`() {
         given()
-            .`when`().get("/api/products")
+            .`when`().get("/api/v1/products")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))
-            .body("data", notNullValue())
+            .body("data.content", notNullValue())
+            .body("data.page", equalTo(0))
+            .body("data.size", equalTo(20))
+            .body("data.totalElements", notNullValue())
+            .body("data.totalPages", notNullValue())
+            .body("data.first", equalTo(true))
     }
     
     @Test
@@ -32,7 +37,7 @@ class ProductsResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(requestBody)
-            .`when`().post("/api/products")
+            .`when`().post("/api/v1/products")
             .then()
             .statusCode(201)
             .body("success", equalTo(true))
@@ -53,7 +58,7 @@ class ProductsResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(requestBody)
-            .`when`().post("/api/products")
+            .`when`().post("/api/v1/products")
             .then()
             .statusCode(400)
     }
@@ -71,13 +76,13 @@ class ProductsResourceTest {
         val code = given()
             .contentType(ContentType.JSON)
             .body(createBody)
-            .`when`().post("/api/products")
+            .`when`().post("/api/v1/products")
             .then()
             .extract().path<String>("data.code")
         
         // Then get it
         given()
-            .`when`().get("/api/products/$code")
+            .`when`().get("/api/v1/products/$code")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))
@@ -87,7 +92,7 @@ class ProductsResourceTest {
     @Test
     fun `should return 404 when product not found`() {
         given()
-            .`when`().get("/api/products/NONEXISTENT")
+            .`when`().get("/api/v1/products/NONEXISTENT")
             .then()
             .statusCode(404)
             .body("success", equalTo(false))
@@ -106,7 +111,7 @@ class ProductsResourceTest {
         val code = given()
             .contentType(ContentType.JSON)
             .body(createBody)
-            .`when`().post("/api/products")
+            .`when`().post("/api/v1/products")
             .then()
             .extract().path<String>("data.code")
         
@@ -121,7 +126,7 @@ class ProductsResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(updateBody)
-            .`when`().put("/api/products/$code")
+            .`when`().put("/api/v1/products/$code")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))
@@ -142,20 +147,20 @@ class ProductsResourceTest {
         val code = given()
             .contentType(ContentType.JSON)
             .body(createBody)
-            .`when`().post("/api/products")
+            .`when`().post("/api/v1/products")
             .then()
             .extract().path<String>("data.code")
         
         // Then delete it
         given()
-            .`when`().delete("/api/products/$code")
+            .`when`().delete("/api/v1/products/$code")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))
         
         // Verify it's deleted
         given()
-            .`when`().get("/api/products/$code")
+            .`when`().get("/api/v1/products/$code")
             .then()
             .statusCode(404)
     }
@@ -174,7 +179,7 @@ class ProductsResourceTest {
             given()
                 .contentType(ContentType.JSON)
                 .body(createBody)
-                .`when`().post("/api/products")
+                .`when`().post("/api/v1/products")
                 .then()
                 .statusCode(201)
         }
@@ -184,7 +189,7 @@ class ProductsResourceTest {
             .queryParam("page", 0)
             .queryParam("size", 3)
             .queryParam("sort", "code")
-            .`when`().get("/api/products")
+            .`when`().get("/api/v1/products")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))
@@ -205,7 +210,7 @@ class ProductsResourceTest {
         val code = given()
             .contentType(ContentType.JSON)
             .body(createBody)
-            .`when`().post("/api/products")
+            .`when`().post("/api/v1/products")
             .then()
             .extract().path<String>("data.code")
         
@@ -220,7 +225,7 @@ class ProductsResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(updateBody)
-            .`when`().put("/api/products/$code")
+            .`when`().put("/api/v1/products/$code")
             .then()
             .statusCode(400)
     }
@@ -238,7 +243,7 @@ class ProductsResourceTest {
         val code = given()
             .contentType(ContentType.JSON)
             .body(createBody)
-            .`when`().post("/api/products")
+            .`when`().post("/api/v1/products")
             .then()
             .extract().path<String>("data.code")
         
@@ -252,7 +257,7 @@ class ProductsResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(updateBody)
-            .`when`().put("/api/products/$code")
+            .`when`().put("/api/v1/products/$code")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))

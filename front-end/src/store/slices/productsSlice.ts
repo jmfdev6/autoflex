@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Product, CreateProductRequest, UpdateProductRequest } from '@/types/product';
 import { PageRequest, PageResponse } from '@/types/api';
 import { productService } from '@/services/productService';
+import { ResponseError } from '@/services/api';
 import { ProductsState } from '../types';
 
 const initialState: ProductsState = {
@@ -11,51 +12,79 @@ const initialState: ProductsState = {
   pagination: null,
 };
 
+/** Fetches products with pagination. Backend always returns PageResponse. */
 export const fetchProducts = createAsyncThunk(
   'products/fetchAll',
-  async () => {
-    const response = await productService.getAll();
-    return response.data;
-  }
-);
-
-export const fetchProductsPaginated = createAsyncThunk(
-  'products/fetchPaginated',
-  async (pageRequest?: PageRequest) => {
-    const response = await productService.getAllPaginated(pageRequest);
-    return response.data;
+  async (pageRequest?: PageRequest, { rejectWithValue } = {} as any) => {
+    try {
+      const response = await productService.getAllPaginated(pageRequest ?? { page: 0, size: 20, sort: 'code' });
+      return response.data;
+    } catch (error) {
+      if (error instanceof ResponseError) {
+        return rejectWithValue(error.apiError);
+      }
+      throw error;
+    }
   }
 );
 
 export const fetchProductByCode = createAsyncThunk(
   'products/fetchByCode',
-  async (code: string) => {
-    const response = await productService.getByCode(code);
-    return response.data;
+  async (code: string, { rejectWithValue }) => {
+    try {
+      const response = await productService.getByCode(code);
+      return response.data;
+    } catch (error) {
+      if (error instanceof ResponseError) {
+        return rejectWithValue(error.apiError);
+      }
+      throw error;
+    }
   }
 );
 
 export const createProduct = createAsyncThunk(
   'products/create',
-  async (request: CreateProductRequest) => {
-    const response = await productService.create(request);
-    return response.data;
+  async (request: CreateProductRequest, { rejectWithValue }) => {
+    try {
+      const response = await productService.create(request);
+      return response.data;
+    } catch (error) {
+      if (error instanceof ResponseError) {
+        return rejectWithValue(error.apiError);
+      }
+      throw error;
+    }
   }
 );
 
 export const updateProduct = createAsyncThunk(
   'products/update',
-  async ({ code, request }: { code: string; request: UpdateProductRequest }) => {
-    const response = await productService.update(code, request);
-    return response.data;
+  async ({ code, request }: { code: string; request: UpdateProductRequest }, { rejectWithValue }) => {
+    try {
+      const response = await productService.update(code, request);
+      return response.data;
+    } catch (error) {
+      if (error instanceof ResponseError) {
+        return rejectWithValue(error.apiError);
+      }
+      throw error;
+    }
   }
 );
 
 export const deleteProduct = createAsyncThunk(
   'products/delete',
-  async (code: string) => {
-    await productService.delete(code);
-    return code;
+  async (code: string, { rejectWithValue }) => {
+    try {
+      await productService.delete(code);
+      return code;
+    } catch (error) {
+      if (error instanceof ResponseError) {
+        return rejectWithValue(error.apiError);
+      }
+      throw error;
+    }
   }
 );
 
@@ -74,20 +103,7 @@ const productsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
-        state.loading = false;
-        state.items = action.payload;
-      })
-      .addCase(fetchProducts.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message || 'Failed to fetch products';
-      })
-      // Fetch paginated
-      .addCase(fetchProductsPaginated.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchProductsPaginated.fulfilled, (state, action: PayloadAction<PageResponse<Product>>) => {
+      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<PageResponse<Product>>) => {
         state.loading = false;
         state.items = action.payload.content;
         state.pagination = {
@@ -99,7 +115,7 @@ const productsSlice = createSlice({
           last: action.payload.last,
         };
       })
-      .addCase(fetchProductsPaginated.rejected, (state, action) => {
+      .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch products';
       })

@@ -95,26 +95,4 @@ class AuthServiceTest {
             authService.refreshToken(refreshRequest)
         }
     }
-    
-    @Test
-    fun `should revoke refresh token`() {
-        // First authenticate
-        val authRequest = AuthRequest(
-            username = "admin",
-            password = "admin123"
-        )
-        val authResponse = authService.authenticate(authRequest)
-        
-        // Revoke token
-        authService.revokeToken(authResponse.refreshToken)
-        
-        // Try to refresh with revoked token
-        val refreshRequest = RefreshTokenRequest(
-            refreshToken = authResponse.refreshToken
-        )
-        
-        assertThrows(UnauthorizedException::class.java) {
-            authService.refreshToken(refreshRequest)
-        }
-    }
 }

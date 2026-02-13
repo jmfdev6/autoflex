@@ -54,3 +54,16 @@ data class ConfirmProductionResponse(
     val successCount: Int,
     val failureCount: Int
 )
+
+/** Response for created production (POST /productions) */
+data class ProductionResponseDto(
+    val id: Long,
+    val status: String,
+    val items: List<ProductionItemDto>,
+    val createdAt: String
+)
+
+data class ProductionItemDto(
+    val productCode: String,
+    val quantity: Int
+)

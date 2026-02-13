@@ -996,7 +996,7 @@ O frontend pode ser facilmente deployado na Vercel.
 
 3. **Configurar variáveis de ambiente**:
    - Na seção "Environment Variables", adicione:
-     - `VITE_API_URL`: URL do seu backend (ex: `https://autoflex-backend-xxxxx.run.app/api`)
+     - `VITE_API_URL`: URL do seu backend com /api/v1 (ex: `https://autoflex-backend-xxxxx.run.app/api/v1`)
 
 4. **Deploy automático**:
    - A cada push na branch `main` (ou `master`), a Vercel fará deploy automaticamente
@@ -1039,7 +1039,7 @@ Para fazer deploy completo do sistema:
    ```bash
    cd front-end
    # Criar .env.production
-   echo "VITE_API_URL=https://autoflex-backend-xxxxx.run.app/api" > .env.production
+   echo "VITE_API_URL=https://autoflex-backend-xxxxx.run.app/api/v1" > .env.production
    ```
 
 4. **Deploy do Frontend** (Vercel):

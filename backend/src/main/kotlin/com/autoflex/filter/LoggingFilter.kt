@@ -1,7 +1,6 @@
 package com.autoflex.filter
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.quarkus.vertx.http.runtime.filters.Filters
 import io.vertx.core.http.HttpServerRequest
 import io.vertx.ext.web.RoutingContext
@@ -20,7 +19,9 @@ class LoggingFilter {
     lateinit var jsonLogging: String
     
     private val logger = Logger.getLogger(LoggingFilter::class.java)
-    private val objectMapper: ObjectMapper = jacksonObjectMapper()
+    
+    @Inject
+    lateinit var objectMapper: ObjectMapper
 
     fun register(@Observes filters: Filters) {
         filters.register(io.vertx.core.Handler { ctx: RoutingContext ->

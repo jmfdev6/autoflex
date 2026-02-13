@@ -1,7 +1,13 @@
 import { ApiResponse, ApiError } from '@/types/api';
 import { fetchWithRetry, parseErrorResponse } from '@/utils/errorHandler';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api';
+// Backend serves under /api/v1; normalize so .../api becomes .../api/v1
+const raw = import.meta.env.VITE_API_URL || 'http://localhost:8081/api/v1';
+const normalized = raw.replace(/\/+$/, '');
+const API_BASE_URL =
+  normalized.endsWith('/api') && !normalized.endsWith('/api/v1')
+    ? `${normalized}/v1`
+    : normalized;
 
 export class ResponseError extends Error {
   constructor(
@@ -18,7 +24,10 @@ export class ApiClient {
   private baseUrl: string;
 
   constructor(baseUrl: string = API_BASE_URL) {
-    this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const normalized = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    this.baseUrl = (normalized.endsWith('/api') && !normalized.endsWith('/api/v1'))
+      ? `${normalized}/v1`
+      : normalized;
   }
 
   private async request<T>(

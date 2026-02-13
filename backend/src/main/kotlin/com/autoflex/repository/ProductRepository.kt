@@ -33,6 +33,6 @@ class ProductRepository : PanacheRepository<Product> {
      * Fallback when full-text search is not needed.
      */
     fun findByNameContaining(name: String): List<Product> {
-        return find("name LIKE ?1", "%${name}%").list()
+        return find("LOWER(name) LIKE LOWER(?1)", "%${name}%").list()
     }
 }

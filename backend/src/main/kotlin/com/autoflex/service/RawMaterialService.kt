@@ -58,7 +58,7 @@ class RawMaterialService(
     @CacheResult(cacheName = "raw-material-by-code")
     fun getByCode(code: String): RawMaterialDto {
         val rawMaterial = rawMaterialRepository.findByCode(code)
-            ?: throw NotFoundException("Raw material with code $code not found")
+            ?: throw NotFoundException("Raw material with code $code not found", "RAW_MATERIAL_NOT_FOUND")
         return rawMaterial.toDto()
     }
     
@@ -99,7 +99,7 @@ class RawMaterialService(
     @CacheInvalidateAll(cacheName = "raw-materials")
     fun update(code: String, request: UpdateRawMaterialRequest): RawMaterialDto {
         val rawMaterial = rawMaterialRepository.findByCode(code)
-            ?: throw NotFoundException("Raw material with code $code not found")
+            ?: throw NotFoundException("Raw material with code $code not found", "RAW_MATERIAL_NOT_FOUND")
         
         request.name?.let { rawMaterial.name = it }
         request.stockQuantity?.let { rawMaterial.stockQuantity = it }
@@ -113,7 +113,7 @@ class RawMaterialService(
     @CacheInvalidateAll(cacheName = "raw-materials")
     fun delete(code: String) {
         val rawMaterial = rawMaterialRepository.findByCode(code)
-            ?: throw NotFoundException("Raw material with code $code not found")
+            ?: throw NotFoundException("Raw material with code $code not found", "RAW_MATERIAL_NOT_FOUND")
         
         rawMaterialRepository.delete(rawMaterial)
     }

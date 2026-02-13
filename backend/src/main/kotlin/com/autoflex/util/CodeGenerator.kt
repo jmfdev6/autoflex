@@ -38,13 +38,24 @@ class CodeGenerator(
         return "RM${String.format("%03d", nextValue)}"
     }
     
+    companion object {
+        /** Whitelist of allowed sequence names to prevent SQL injection */
+        private val ALLOWED_SEQUENCES = setOf("product_code_sequence", "raw_material_code_sequence")
+    }
+
     /**
      * Gets the next value from a PostgreSQL SEQUENCE.
      * This is atomic and thread-safe.
+     *
+     * Note: PostgreSQL's nextval() requires a string literal; JPA named parameters
+     * cannot be used for function arguments. The sequence name is validated against
+     * a whitelist to prevent SQL injection.
      */
     private fun getNextSequenceValue(sequenceName: String): Long {
-        val query = entityManager.createNativeQuery("SELECT nextval(:sequenceName)")
-        query.setParameter("sequenceName", sequenceName)
+        require(sequenceName in ALLOWED_SEQUENCES) {
+            "Invalid sequence name: $sequenceName"
+        }
+        val query = entityManager.createNativeQuery("SELECT nextval('$sequenceName')")
         val result = query.singleResult
         return when (result) {
             is Number -> result.toLong()

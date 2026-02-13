@@ -17,11 +17,10 @@ class HttpAuthFilter {
     // Rotas protegidas
     // /swagger-ui precisa de senha para acessar
     // /q/openapi.json não precisa de senha quando vem do Swagger UI (via Referer)
+    // Health check (/health, /api/v1/health, /q/health) é público para probes e load balancers
     private val protectedPaths = listOf(
         "/swagger-ui",
-        "/q/openapi",
-        "/q/health",
-        "/health"
+        "/q/openapi"
     )
     
     private fun getAllowedOrigins(): List<String> {
@@ -37,11 +36,7 @@ class HttpAuthFilter {
             // Verificar se config está inicializado antes de acessá-lo
             if (!::config.isInitialized) {
                 // Config não está inicializado, usar fallback
-                return listOf(
-                    "https://front-end-woad-mu.vercel.app",
-                    "https://front-7v48p0px8-propostas-projects.vercel.app",
-                    "https://front-bilgcszov-propostas-projects.vercel.app"
-                )
+                return listOf("https://*.vercel.app")
             }
             
             // Tentar ler a propriedade diretamente (o Quarkus já resolve o perfil)
@@ -50,14 +45,12 @@ class HttpAuthFilter {
                 value.get()
             } else {
                 // Fallback: usar origem de produção padrão
-                "https://front-end-woad-mu.vercel.app,https://front-7v48p0px8-propostas-projects.vercel.app,https://front-bilgcszov-propostas-projects.vercel.app"
+                "https://*.vercel.app"
             }
         } catch (e: kotlin.UninitializedPropertyAccessException) {
-            // Config não está inicializado, usar fallback
-            "https://front-end-woad-mu.vercel.app,https://front-bilgcszov-propostas-projects.vercel.app"
+            "https://*.vercel.app"
         } catch (e: Exception) {
-            // Em caso de qualquer outro erro, usar origem de produção padrão
-            "https://front-end-woad-mu.vercel.app,https://front-bilgcszov-propostas-projects.vercel.app"
+            "https://*.vercel.app"
         }
         
         return configOrigins.split(",").map { it.trim().removeSuffix("/") }

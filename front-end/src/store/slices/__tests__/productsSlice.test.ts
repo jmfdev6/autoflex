@@ -25,10 +25,20 @@ describe('productsSlice', () => {
     const products: Product[] = [
       { code: 'P001', name: 'Product A', value: 100 },
     ];
-    const action = { type: fetchProducts.fulfilled.type, payload: products };
+    const pageResponse = {
+      content: products,
+      page: 0,
+      size: 20,
+      totalElements: 1,
+      totalPages: 1,
+      first: true,
+      last: true,
+    };
+    const action = { type: fetchProducts.fulfilled.type, payload: pageResponse };
     const state = productsReducer(initialState, action);
     expect(state.loading).toBe(false);
     expect(state.items).toEqual(products);
+    expect(state.pagination).toEqual({ page: 0, size: 20, totalElements: 1, totalPages: 1, first: true, last: true });
   });
 
   it('should handle createProduct.fulfilled', () => {

@@ -6,10 +6,15 @@ describe('productService', () => {
     jest.clearAllMocks();
   });
 
-  it('should get all products', async () => {
-    const response = await productService.getAll();
+  it('should get products paginated', async () => {
+    const response = await productService.getAllPaginated({ page: 0, size: 20, sort: 'code' });
     expect(response.success).toBe(true);
-    expect(Array.isArray(response.data)).toBe(true);
+    expect(response.data).toHaveProperty('content');
+    expect(Array.isArray(response.data.content)).toBe(true);
+    expect(response.data).toHaveProperty('page', 0);
+    expect(response.data).toHaveProperty('size', 20);
+    expect(response.data).toHaveProperty('totalElements');
+    expect(response.data).toHaveProperty('totalPages');
   });
 
   it('should create a product', async () => {

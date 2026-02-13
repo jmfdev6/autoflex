@@ -1,11 +1,13 @@
 package com.autoflex.filter
 
 import jakarta.annotation.Priority
+import jakarta.inject.Inject
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.Provider
+import org.eclipse.microprofile.config.inject.ConfigProperty
 
 @Provider
 @Priority(jakarta.ws.rs.Priorities.AUTHENTICATION)
@@ -18,7 +20,9 @@ class AuthFilter : ContainerRequestFilter {
         "/health"
     )
 
-    private val validPassword = "projedata"
+    @Inject
+    @ConfigProperty(name = "autoflex.api.key")
+    lateinit var validApiKey: String
 
     override fun filter(requestContext: ContainerRequestContext) {
         val path = requestContext.uriInfo.path
@@ -37,11 +41,10 @@ class AuthFilter : ContainerRequestFilter {
             return
         }
 
-        // Verificar autenticação via header X-API-Key ou query parameter apiKey
+        // Verificar autenticação via header X-API-Key (query param removido por segurança)
         val apiKey = requestContext.getHeaderString("X-API-Key")
-            ?: requestContext.uriInfo.queryParameters.getFirst("apiKey")
 
-        if (apiKey == null || apiKey != validPassword) {
+        if (apiKey == null || apiKey != validApiKey) {
             // Senha inválida ou não fornecida
             requestContext.abortWith(
                 Response.status(Response.Status.UNAUTHORIZED)

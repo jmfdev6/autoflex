@@ -12,7 +12,7 @@ class RawMaterialsResourceTest {
     @Test
     fun `should get all raw materials`() {
         given()
-            .`when`().get("/api/raw-materials")
+            .`when`().get("/api/v1/raw-materials")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))
@@ -31,7 +31,7 @@ class RawMaterialsResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(requestBody)
-            .`when`().post("/api/raw-materials")
+            .`when`().post("/api/v1/raw-materials")
             .then()
             .statusCode(201)
             .body("success", equalTo(true))
@@ -53,7 +53,7 @@ class RawMaterialsResourceTest {
         val code = given()
             .contentType(ContentType.JSON)
             .body(createBody)
-            .`when`().post("/api/raw-materials")
+            .`when`().post("/api/v1/raw-materials")
             .then()
             .extract().path<String>("data.code")
         
@@ -68,7 +68,7 @@ class RawMaterialsResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(updateBody)
-            .`when`().put("/api/raw-materials/$code")
+            .`when`().put("/api/v1/raw-materials/$code")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))
@@ -89,13 +89,13 @@ class RawMaterialsResourceTest {
         val code = given()
             .contentType(ContentType.JSON)
             .body(createBody)
-            .`when`().post("/api/raw-materials")
+            .`when`().post("/api/v1/raw-materials")
             .then()
             .extract().path<String>("data.code")
         
         // Then delete it
         given()
-            .`when`().delete("/api/raw-materials/$code")
+            .`when`().delete("/api/v1/raw-materials/$code")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))

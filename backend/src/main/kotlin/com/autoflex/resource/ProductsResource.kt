@@ -29,15 +29,15 @@ class ProductsResource @Inject constructor(
     @GET
     @Operation(
         summary = "Listar produtos",
-        description = "Retorna uma lista de produtos. Use page, size e sort para paginação. Cache: 5 minutos."
+        description = "Retorna produtos paginados. Query params: page (0-based, default 0), size (default 20, max 100), sort (default 'code'; prefix '-' para descendente, ex: '-value'). Sempre retorna PageResponse com content, page, size, totalElements, totalPages, first, last."
     )
     @APIResponse(
         responseCode = "200",
-        description = "Lista de produtos retornada com sucesso",
+        description = "Lista paginada de produtos (data.content = lista, data.totalElements = total)",
         content = [Content(
             schema = Schema(),
             mediaType = "application/json",
-            example = "{\"success\": true, \"data\": [{\"code\": \"P001\", \"name\": \"Bicicleta\", \"value\": 200.00}]}"
+            example = "{\"success\": true, \"data\": {\"content\": [{\"code\": \"P001\", \"name\": \"Bicicleta\", \"value\": 200.00}], \"page\": 0, \"size\": 20, \"totalElements\": 1, \"totalPages\": 1, \"first\": true, \"last\": true}}"
         )]
     )
     @APIResponse(
@@ -47,27 +47,13 @@ class ProductsResource @Inject constructor(
     fun getAll(
         @BeanParam pageRequest: PageRequest
     ): Response {
-        // Se não especificou paginação (valores padrão), retornar lista simples para compatibilidade
-        val usePagination = pageRequest.page > 0 || pageRequest.size != 20 || pageRequest.sort != "code"
-        
-        return if (usePagination) {
-            val pageResponse = productService.getAllPaginated(pageRequest)
-            Response.ok(
-                ApiResponse(
-                    success = true,
-                    data = pageResponse
-                )
-            ).build()
-        } else {
-            // Compatibilidade: retornar lista simples se não usar paginação
-            val products = productService.getAll()
-            Response.ok(
-                ApiResponse(
-                    success = true,
-                    data = products
-                )
-            ).build()
-        }
+        val pageResponse = productService.getAllPaginated(pageRequest)
+        return Response.ok(
+            ApiResponse(
+                success = true,
+                data = pageResponse
+            )
+        ).build()
     }
     
     @GET
@@ -190,12 +176,6 @@ class ProductsResource @Inject constructor(
     )
     fun delete(@PathParam("code") code: String): Response {
         productService.delete(code)
-        return Response.ok(
-            ApiResponse(
-                success = true,
-                data = null,
-                message = "Product deleted successfully"
-            )
-        ).build()
+        return Response.noContent().build()
     }
 }

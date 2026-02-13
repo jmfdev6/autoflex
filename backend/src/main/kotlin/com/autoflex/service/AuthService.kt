@@ -111,13 +111,6 @@ class AuthService {
     }
     
     /**
-     * Revokes a refresh token (logout).
-     */
-    fun revokeToken(refreshToken: String) {
-        refreshTokens.remove(refreshToken)
-    }
-    
-    /**
      * Generates a JWT access token.
      */
     private fun generateAccessToken(username: String, roles: Set<String>): String {
@@ -135,6 +128,9 @@ class AuthService {
      * Generates a refresh token and stores it for validation.
      */
     private fun generateRefreshToken(username: String, roles: Set<String>): String {
+        // Cleanup expired tokens to prevent memory leak
+        cleanupExpiredTokens()
+        
         val token = UUID.randomUUID().toString()
         val expiresAt = Instant.now().plus(refreshTokenDuration, ChronoUnit.SECONDS)
         
@@ -145,5 +141,13 @@ class AuthService {
         )
         
         return token
+    }
+    
+    /**
+     * Removes expired refresh tokens from in-memory storage.
+     */
+    private fun cleanupExpiredTokens() {
+        val now = Instant.now()
+        refreshTokens.entries.removeIf { it.value.expiresAt.isBefore(now) }
     }
 }

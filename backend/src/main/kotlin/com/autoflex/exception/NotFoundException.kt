@@ -1,3 +1,6 @@
 package com.autoflex.exception
 
-class NotFoundException(message: String) : RuntimeException(message)
+class NotFoundException(
+    message: String,
+    val errorCode: String = "NOT_FOUND"
+) : RuntimeException(message)

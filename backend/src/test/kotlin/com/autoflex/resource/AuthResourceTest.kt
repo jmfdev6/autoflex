@@ -22,7 +22,7 @@ class AuthResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(requestBody)
-            .`when`().post("/api/auth/login")
+            .`when`().post("/api/v1/auth/login")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))
@@ -44,11 +44,11 @@ class AuthResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(requestBody)
-            .`when`().post("/api/auth/login")
+            .`when`().post("/api/v1/auth/login")
             .then()
             .statusCode(401)
             .body("success", equalTo(false))
-            .body("code", equalTo("UNAUTHORIZED"))
+            .body("errorCode", equalTo("UNAUTHORIZED"))
     }
     
     @Test
@@ -62,7 +62,7 @@ class AuthResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(requestBody)
-            .`when`().post("/api/auth/login")
+            .`when`().post("/api/v1/auth/login")
             .then()
             .statusCode(400)
     }
@@ -80,7 +80,7 @@ class AuthResourceTest {
         val refreshToken = given()
             .contentType(ContentType.JSON)
             .body(loginBody)
-            .`when`().post("/api/auth/login")
+            .`when`().post("/api/v1/auth/login")
             .then()
             .extract().path<String>("data.refreshToken")
         
@@ -94,44 +94,11 @@ class AuthResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(refreshBody)
-            .`when`().post("/api/auth/refresh")
+            .`when`().post("/api/v1/auth/refresh")
             .then()
             .statusCode(200)
             .body("success", equalTo(true))
             .body("data.accessToken", notNullValue())
             .body("data.refreshToken", notNullValue())
-    }
-    
-    @Test
-    fun `should logout successfully`() {
-        // First authenticate
-        val loginBody = """
-            {
-                "username": "admin",
-                "password": "admin123"
-            }
-        """.trimIndent()
-        
-        val refreshToken = given()
-            .contentType(ContentType.JSON)
-            .body(loginBody)
-            .`when`().post("/api/auth/login")
-            .then()
-            .extract().path<String>("data.refreshToken")
-        
-        // Then logout
-        val logoutBody = """
-            {
-                "refreshToken": "$refreshToken"
-            }
-        """.trimIndent()
-        
-        given()
-            .contentType(ContentType.JSON)
-            .body(logoutBody)
-            .`when`().post("/api/auth/logout")
-            .then()
-            .statusCode(200)
-            .body("success", equalTo(true))
     }
 }

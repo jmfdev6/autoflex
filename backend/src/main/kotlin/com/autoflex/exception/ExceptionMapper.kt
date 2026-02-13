@@ -15,7 +15,7 @@ class NotFoundExceptionMapper : ExceptionMapper<NotFoundException> {
             .entity(
                 ErrorResponse(
                     message = exception.message ?: "Resource not found",
-                    code = "NOT_FOUND"
+                    errorCode = exception.errorCode
                 )
             )
             .build()
@@ -29,7 +29,7 @@ class BadRequestExceptionMapper : ExceptionMapper<BadRequestException> {
             .entity(
                 ErrorResponse(
                     message = exception.message ?: "Bad request",
-                    code = "BAD_REQUEST"
+                    errorCode = "BAD_REQUEST"
                 )
             )
             .build()
@@ -48,7 +48,7 @@ class ConstraintViolationExceptionMapper : ExceptionMapper<ConstraintViolationEx
             .entity(
                 ErrorResponse(
                     message = "Validation failed",
-                    code = "VALIDATION_ERROR",
+                    errorCode = "VALIDATION_ERROR",
                     details = mapOf("violations" to violations)
                 )
             )
@@ -63,7 +63,7 @@ class ConcurrencyExceptionMapper : ExceptionMapper<ConcurrencyException> {
             .entity(
                 ErrorResponse(
                     message = exception.message ?: "Concurrency conflict occurred",
-                    code = "CONCURRENCY_CONFLICT"
+                    errorCode = "CONCURRENCY_CONFLICT"
                 )
             )
             .build()
@@ -82,7 +82,7 @@ class InsufficientStockExceptionMapper : ExceptionMapper<InsufficientStockExcept
             .entity(
                 ErrorResponse(
                     message = exception.message ?: "Insufficient stock",
-                    code = "INSUFFICIENT_STOCK",
+                    errorCode = "INSUFFICIENT_STOCK",
                     details = if (details.isNotEmpty()) details else null
                 )
             )
@@ -97,7 +97,7 @@ class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
             .entity(
                 ErrorResponse(
                     message = exception.message ?: "Unauthorized",
-                    code = "UNAUTHORIZED"
+                    errorCode = "UNAUTHORIZED"
                 )
             )
             .build()
@@ -106,19 +106,17 @@ class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
 
 @Provider
 class GenericExceptionMapper : ExceptionMapper<Exception> {
+    
+    private val logger = org.jboss.logging.Logger.getLogger(GenericExceptionMapper::class.java)
+    
     override fun toResponse(exception: Exception): Response {
-        // Log do erro para debug (em produção, será logado automaticamente pelo Quarkus)
-        exception.printStackTrace()
+        logger.errorf(exception, "Unhandled exception")
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
             .entity(
                 ErrorResponse(
-                    message = exception.message ?: "An internal error occurred",
-                    code = "INTERNAL_ERROR",
-                    details = mapOf(
-                        "exceptionType" to exception.javaClass.simpleName,
-                        "message" to (exception.message ?: "No message available")
-                    )
+                    message = "An internal error occurred",
+                    errorCode = "INTERNAL_ERROR"
                 )
             )
             .build()

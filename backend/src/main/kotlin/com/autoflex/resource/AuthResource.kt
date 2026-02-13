@@ -18,11 +18,11 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag
 
 /**
  * REST resource for authentication endpoints.
- * 
+ * JWT stateless: logout is client-side (discard token); no server-side logout endpoint.
+ *
  * Provides:
- * - POST /api/auth/login - User authentication
- * - POST /api/auth/refresh - Refresh access token
- * - POST /api/auth/logout - Revoke refresh token
+ * - POST /api/v1/auth/login - User authentication
+ * - POST /api/v1/auth/refresh - Refresh access token
  */
 @Path("/auth")
 @Produces(MediaType.APPLICATION_JSON)
@@ -88,31 +88,6 @@ class AuthResource @Inject constructor(
                 success = true,
                 data = authResponse,
                 message = "Token refreshed successfully"
-            )
-        ).build()
-    }
-    
-    @POST
-    @Path("/logout")
-    @Operation(
-        summary = "Logout user",
-        description = "Revokes a refresh token, effectively logging out the user."
-    )
-    @APIResponse(
-        responseCode = "200",
-        description = "Logout successful"
-    )
-    @APIResponse(
-        responseCode = "400",
-        description = "Invalid request data"
-    )
-    fun logout(@Valid request: RefreshTokenRequest): Response {
-        authService.revokeToken(request.refreshToken)
-        return Response.ok(
-            ApiResponse(
-                success = true,
-                data = null,
-                message = "Logout successful"
             )
         ).build()
     }

@@ -21,7 +21,7 @@ class ProductRawMaterialService(
     
     fun getByProductCode(productCode: String): List<ProductRawMaterialDto> {
         productRepository.findByCode(productCode)
-            ?: throw NotFoundException("Product with code $productCode not found")
+            ?: throw NotFoundException("Product with code $productCode not found", "PRODUCT_NOT_FOUND")
         
         return productRawMaterialRepository.findByProductCode(productCode)
             .map { it.toDto() }
@@ -30,10 +30,10 @@ class ProductRawMaterialService(
     @Transactional
     fun create(productCode: String, request: CreateProductRawMaterialRequest): ProductRawMaterialDto {
         val product = productRepository.findByCode(productCode)
-            ?: throw NotFoundException("Product with code $productCode not found")
+            ?: throw NotFoundException("Product with code $productCode not found", "PRODUCT_NOT_FOUND")
         
         val rawMaterial = rawMaterialRepository.findByCode(request.rawMaterialCode)
-            ?: throw NotFoundException("Raw material with code ${request.rawMaterialCode} not found")
+            ?: throw NotFoundException("Raw material with code ${request.rawMaterialCode} not found", "RAW_MATERIAL_NOT_FOUND")
         
         val existing = productRawMaterialRepository.findByProductCodeAndRawMaterialCode(
             productCode,
@@ -63,7 +63,7 @@ class ProductRawMaterialService(
         val productRawMaterial = productRawMaterialRepository.findByProductCodeAndRawMaterialCode(
             productCode,
             rawMaterialCode
-        ) ?: throw NotFoundException("Association not found")
+        ) ?: throw NotFoundException("Association not found", "PRODUCT_RAW_MATERIAL_NOT_FOUND")
         
         productRawMaterial.quantity = request.quantity
         productRawMaterialRepository.persist(productRawMaterial)
@@ -76,7 +76,7 @@ class ProductRawMaterialService(
         val productRawMaterial = productRawMaterialRepository.findByProductCodeAndRawMaterialCode(
             productCode,
             rawMaterialCode
-        ) ?: throw NotFoundException("Association not found")
+        ) ?: throw NotFoundException("Association not found", "PRODUCT_RAW_MATERIAL_NOT_FOUND")
         
         productRawMaterialRepository.delete(productRawMaterial)
     }

@@ -27,6 +27,11 @@ class ProductService(
     @Inject private val businessMetrics: BusinessMetrics
 ) {
     
+    companion object {
+        /** Whitelist of allowed sort fields to prevent SQL injection */
+        private val ALLOWED_SORT_FIELDS = setOf("code", "name", "value")
+    }
+    
     /**
      * Gets all products with caching.
      * Cache TTL: 5 minutes
@@ -38,10 +43,12 @@ class ProductService(
     
     fun getAllPaginated(pageRequest: PageRequest): PageResponse<ProductDto> {
         val sortField = pageRequest.getSortField()
+            .takeIf { it in ALLOWED_SORT_FIELDS }
+            ?: "code"
         val direction = if (pageRequest.isAscending()) "ASC" else "DESC"
         
         // Optimized query with proper pagination
-        // Using indexed fields for sorting improves performance
+        // Sort field is validated against whitelist above
         val page = productRepository.find("ORDER BY $sortField $direction")
             .page(pageRequest.page, pageRequest.size)
         
@@ -72,12 +79,13 @@ class ProductService(
     @CacheResult(cacheName = "product-by-code")
     fun getByCode(code: String): ProductDto {
         val product = productRepository.findByCode(code)
-            ?: throw NotFoundException("Product with code $code not found")
+            ?: throw NotFoundException("Product with code $code not found", "PRODUCT_NOT_FOUND")
         return product.toDto()
     }
     
     @Transactional
     @CacheInvalidateAll(cacheName = "products")
+    @CacheInvalidateAll(cacheName = "product-by-code")
     fun create(request: CreateProductRequest): ProductDto {
         // Use thread-safe code generator with PostgreSQL SEQUENCE
         // This eliminates race conditions that occur with count() + 1 approach
@@ -113,7 +121,7 @@ class ProductService(
     @CacheInvalidateAll(cacheName = "products")
     fun update(code: String, request: UpdateProductRequest): ProductDto {
         val product = productRepository.findByCode(code)
-            ?: throw NotFoundException("Product with code $code not found")
+            ?: throw NotFoundException("Product with code $code not found", "PRODUCT_NOT_FOUND")
         
         request.name?.let { product.name = it }
         request.value?.let { product.value = it }
@@ -128,7 +136,7 @@ class ProductService(
     @CacheInvalidateAll(cacheName = "products")
     fun delete(code: String) {
         val product = productRepository.findByCode(code)
-            ?: throw NotFoundException("Product with code $code not found")
+            ?: throw NotFoundException("Product with code $code not found", "PRODUCT_NOT_FOUND")
         
         productRepository.delete(product)
         businessMetrics.recordProductDeleted()
