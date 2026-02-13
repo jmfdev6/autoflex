@@ -148,7 +148,7 @@ jobs:
         working-directory: ./autoflex/front-end
         run: npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://autoflex-backend-r4tfkajula-uc.a.run.app/api' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://autoflex-backend-r4tfkajula-uc.a.run.app/api/v1' }}
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
